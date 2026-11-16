@@ -38,6 +38,10 @@ if not defined N8N_PORT set "N8N_PORT=5678"
 if not exist "%ROOT%\data" mkdir "%ROOT%\data"
 if not exist "%ROOT%\local-files" mkdir "%ROOT%\local-files"
 
+rem Checked once, before the restart loop: a second n8n on a taken port exits at once and this
+rem script would relaunch it every 10 seconds forever, both writing to the same SQLite file.
+node -e "require('net').createServer().once('error',()=>process.exit(1)).listen(+process.env.N8N_PORT,process.env.N8N_LISTEN_ADDRESS,function(){this.close()})" || goto :already_running
+
 :run
 echo [n8n] Starting n8n %N8N_VERSION% on http://localhost:%N8N_PORT%
 call "%NPM_PREFIX%\n8n.cmd" start
@@ -63,6 +67,11 @@ goto :fail
 
 :wrong_node
 echo [n8n] Node.js %NODE_MAJOR% detected. This setup requires Node.js 24 or 26 LTS.
+goto :fail
+
+:already_running
+echo [n8n] %N8N_LISTEN_ADDRESS%:%N8N_PORT% is already in use, so n8n is probably running already.
+echo [n8n] If the "minimal-n8n" autostart task started it, stop that with: schtasks /end /tn minimal-n8n
 goto :fail
 
 :install_failed

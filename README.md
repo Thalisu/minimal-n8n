@@ -76,7 +76,7 @@ Requirement: n8n has started at least once with `windows\start-n8n.cmd`. The scr
 Run `windows\autostart.cmd`. It asks for administrator rights and for your Windows account password (a PIN does not work), then registers a scheduled task named `minimal-n8n` that runs `windows\start-n8n.cmd` at boot, before anyone logs in.
 
 - The task has no window. Start it with `schtasks /run /tn minimal-n8n` and stop it with `schtasks /end /tn minimal-n8n`.
-- Do not also run `windows\start-n8n.cmd` by hand while the task is running: the second n8n fails on the port that is already in use.
+- Only one n8n runs at a time. `windows\start-n8n.cmd` refuses to start when its port is already in use, so opening it by hand while the task is running (or the other way round) prints a message and stops.
 - Run `windows\autostart.cmd` again after you change your Windows password. The task stores the old one and stops starting.
 - `windows\autostart.cmd remove` unregisters the task.
 
