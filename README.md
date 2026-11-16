@@ -71,7 +71,16 @@ Double-click `windows\start-n8n.cmd`, or run it from a terminal. The script:
 
 ### Start with Windows
 
-Press `Win+R`, type `shell:startup`, and create a shortcut to `windows\start-n8n.cmd` in that folder. In the shortcut properties, set **Run** to **Minimized**.
+Requirement: n8n has started at least once with `windows\start-n8n.cmd`. The script checks for `data\.n8n\database.sqlite`, which n8n creates on its first start, and refuses to register the task without it.
+
+Run `windows\autostart.cmd`. It asks for administrator rights and for your Windows account password (a PIN does not work), then registers a scheduled task named `minimal-n8n` that runs `windows\start-n8n.cmd` at boot, before anyone logs in.
+
+- The task has no window. Start it with `schtasks /run /tn minimal-n8n` and stop it with `schtasks /end /tn minimal-n8n`.
+- Do not also run `windows\start-n8n.cmd` by hand while the task is running: the second n8n fails on the port that is already in use.
+- Run `windows\autostart.cmd` again after you change your Windows password. The task stores the old one and stops starting.
+- `windows\autostart.cmd remove` unregisters the task.
+
+If n8n should start only after you log in, skip the task: press `Win+R`, type `shell:startup`, and create a shortcut to `windows\start-n8n.cmd` in that folder. In the shortcut properties, set **Run** to **Minimized**.
 
 ### Differences from Docker
 
