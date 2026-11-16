@@ -4,10 +4,10 @@ A low-memory n8n setup (SQLite, single process, aggressive execution pruning) si
 
 There are two ways to run it, and they share the same `.env`:
 
-| Host    | How                   | Why                                                                                                               |
-| ------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Linux   | `docker compose`      | Native containers, no VM overhead, hard memory limit via `mem_limit`.                                             |
-| Windows | `start-n8n.cmd` (npm) | Docker Desktop needs a WSL2 VM that costs 300-600 MB before n8n even starts. Running on Node directly skips that. |
+| Host    | How                           | Why                                                                                                               |
+| ------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Linux   | `linux/docker-compose.yml`    | Native containers, no VM overhead, hard memory limit via `mem_limit`.                                             |
+| Windows | `windows\start-n8n.cmd` (npm) | Docker Desktop needs a WSL2 VM that costs 300-600 MB before n8n even starts. Running on Node directly skips that. |
 
 The Docker Compose setup is for **Linux only**. Do not use it on Windows.
 
@@ -25,11 +25,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 Back up this key. If you lose it, n8n cannot decrypt any stored credential.
 
+On Windows, `windows\setup.cmd` does both steps for you.
+
 ## Linux (Docker Compose)
 
 ```sh
-docker compose up -d
+docker compose --env-file .env -f linux/docker-compose.yml up -d
 ```
+
+Run it from the repository root. `--env-file` is required because Compose otherwise looks for `.env` next to the compose file.
 
 - UI: <http://localhost:5678> (bound to 127.0.0.1 only)
 - Data: the `n8n_data` Docker volume
@@ -39,11 +43,21 @@ docker compose up -d
 
 ### Requirements
 
-- **Node.js 24 LTS** from <https://nodejs.org>. n8n 2.x requires Node 24 or newer. The script only accepts Node 24 because `isolated-vm` and `sqlite3` ship prebuilt Windows binaries for it. Other versions need Visual Studio Build Tools to compile them.
+- **Node.js 24 LTS**. n8n 2.x requires Node 24 or newer. The scripts only accept Node 24 because `isolated-vm` and `sqlite3` ship prebuilt Windows binaries for it. Other versions need Visual Studio Build Tools to compile them.
+
+### Setup
+
+Double-click `windows\setup.cmd`, or run it from a terminal. The script:
+
+1. Installs Node.js 24 with winget when Node is missing. If another Node version is installed, it stops and leaves it alone.
+2. Creates `.env` from `.env.example` with a random `N8N_ENCRYPTION_KEY` when `.env` does not exist. An existing `.env` is never changed.
+3. Installs `n8n@<N8N_VERSION>` globally with npm.
+
+Without winget, install Node.js 24 LTS from <https://nodejs.org> and run the script again.
 
 ### Run
 
-Double-click `start-n8n.cmd`, or run it from a terminal. The script:
+Double-click `windows\start-n8n.cmd`, or run it from a terminal. The script:
 
 1. Loads `.env`.
 2. Checks that the encryption key is set and that Node 24 is installed.
@@ -57,7 +71,7 @@ Double-click `start-n8n.cmd`, or run it from a terminal. The script:
 
 ### Start with Windows
 
-Press `Win+R`, type `shell:startup`, and create a shortcut to `start-n8n.cmd` in that folder. In the shortcut properties, set **Run** to **Minimized**.
+Press `Win+R`, type `shell:startup`, and create a shortcut to `windows\start-n8n.cmd` in that folder. In the shortcut properties, set **Run** to **Minimized**.
 
 ### Differences from Docker
 

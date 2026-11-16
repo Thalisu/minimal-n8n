@@ -1,0 +1,37 @@
+# Pinned so the n8n_data volume keeps its name (minimal-n8n_n8n_data) regardless of the
+# folder this file lives in; Compose would otherwise derive the project name from "linux".
+name: minimal-n8n
+
+services:
+  n8n:
+    image: n8nio/n8n:${N8N_VERSION:?N8N_VERSION is required}
+    container_name: n8n
+    restart: unless-stopped
+    # n8n waits up to 30 s (N8N_GRACEFUL_SHUTDOWN_TIMEOUT) for running executions; Docker's
+    # default 10 s would SIGKILL it mid-write.
+    stop_grace_period: 40s
+    ports:
+      - "127.0.0.1:5678:5678"
+    env_file:
+      - ../.env
+    environment:
+      # Heap caps: 512 (main) + 256 (task runner child process). mem_limit must stay well
+      # above their sum: on 2.47.7 the container already uses ~350 MiB idle and peaked at
+      # ~645 MiB during first-start migrations, and exceeding mem_limit OOM-kills n8n.
+      NODE_OPTIONS: --max-old-space-size=512
+      N8N_RUNNERS_MAX_OLD_SPACE_SIZE: 256
+      # n8n 2.x only lets Read/Write Files nodes touch ~/.n8n-files by default.
+      N8N_RESTRICT_FILE_ACCESS_TO: /files
+    mem_limit: 1536m
+    cpus: 1.5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ../local-files:/files
+
+volumes:
+  n8n_data:

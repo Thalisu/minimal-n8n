@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableExtensions
-cd /d "%~dp0"
+for %%I in ("%~dp0..") do set "ROOT=%%~fI"
+cd /d "%ROOT%"
 title n8n
 
 if not exist ".env" goto :missing_env
@@ -26,13 +27,15 @@ if not "%N8N_INSTALLED%"=="%N8N_VERSION%" (
   call npm install -g --no-fund --no-audit n8n@%N8N_VERSION% || goto :install_failed
 )
 
-rem Same memory budget as docker-compose.yml: 512 MB main heap + 256 MB task runner heap.
+rem Same memory budget as linux/docker-compose.yml: 512 MB main heap + 256 MB task runner heap.
 set "NODE_OPTIONS=--max-old-space-size=512"
 set "N8N_RUNNERS_MAX_OLD_SPACE_SIZE=256"
-set "N8N_USER_FOLDER=%~dp0data"
-set "N8N_RESTRICT_FILE_ACCESS_TO=%~dp0local-files"
-if not exist "%~dp0data" mkdir "%~dp0data"
-if not exist "%~dp0local-files" mkdir "%~dp0local-files"
+set "N8N_USER_FOLDER=%ROOT%\data"
+set "N8N_RESTRICT_FILE_ACCESS_TO=%ROOT%\local-files"
+rem n8n listens on every interface by default; linux/docker-compose.yml only publishes 127.0.0.1, so match it here.
+if not defined N8N_LISTEN_ADDRESS set "N8N_LISTEN_ADDRESS=127.0.0.1"
+if not exist "%ROOT%\data" mkdir "%ROOT%\data"
+if not exist "%ROOT%\local-files" mkdir "%ROOT%\local-files"
 
 :run
 echo [n8n] Starting n8n %N8N_VERSION% on http://localhost:%N8N_PORT%
@@ -42,7 +45,7 @@ timeout /t 10 /nobreak >nul
 goto :run
 
 :missing_env
-echo [n8n] .env not found. Copy .env.example to .env and set N8N_ENCRYPTION_KEY.
+echo [n8n] .env not found. Run windows\setup.cmd, or copy .env.example to .env and set N8N_ENCRYPTION_KEY.
 goto :fail
 
 :missing_version
@@ -54,7 +57,7 @@ echo [n8n] N8N_ENCRYPTION_KEY is still the placeholder. Set a random value in .e
 goto :fail
 
 :missing_node
-echo [n8n] Node.js not found. Install Node.js 24 LTS from https://nodejs.org and open a new terminal.
+echo [n8n] Node.js not found. Run windows\setup.cmd, or install Node.js 24 LTS from https://nodejs.org and open a new terminal.
 goto :fail
 
 :wrong_node
