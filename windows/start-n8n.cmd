@@ -14,8 +14,8 @@ if not defined N8N_ENCRYPTION_KEY goto :default_key
 
 where node >nul 2>&1 || goto :missing_node
 for /f "tokens=1 delims=v." %%M in ('node -v') do set "NODE_MAJOR=%%M"
-rem isolated-vm and sqlite3 ship Windows prebuilds for Node 24 (ABI 137); other majors need Visual Studio Build Tools to compile.
-if not "%NODE_MAJOR%"=="24" goto :wrong_node
+rem isolated-vm 7 ships Windows prebuilds only for Node 24 (ABI 137) and 26 (ABI 147); other majors need Visual Studio Build Tools to compile it.
+if not "%NODE_MAJOR%"=="24" if not "%NODE_MAJOR%"=="26" goto :wrong_node
 
 for /f "delims=" %%P in ('npm prefix -g') do set "NPM_PREFIX=%%P"
 set "N8N_INSTALLED="
@@ -34,12 +34,13 @@ set "N8N_USER_FOLDER=%ROOT%\data"
 set "N8N_RESTRICT_FILE_ACCESS_TO=%ROOT%\local-files"
 rem n8n listens on every interface by default; linux/docker-compose.yml only publishes 127.0.0.1, so match it here.
 if not defined N8N_LISTEN_ADDRESS set "N8N_LISTEN_ADDRESS=127.0.0.1"
+if not defined N8N_PORT set "N8N_PORT=5678"
 if not exist "%ROOT%\data" mkdir "%ROOT%\data"
 if not exist "%ROOT%\local-files" mkdir "%ROOT%\local-files"
 
 :run
 echo [n8n] Starting n8n %N8N_VERSION% on http://localhost:%N8N_PORT%
-call n8n start
+call "%NPM_PREFIX%\n8n.cmd" start
 echo [n8n] Exited with code %errorlevel%. Restarting in 10 seconds, close this window to stop.
 timeout /t 10 /nobreak >nul
 goto :run
@@ -57,11 +58,11 @@ echo [n8n] N8N_ENCRYPTION_KEY is still the placeholder. Set a random value in .e
 goto :fail
 
 :missing_node
-echo [n8n] Node.js not found. Run windows\setup.cmd, or install Node.js 24 LTS from https://nodejs.org and open a new terminal.
+echo [n8n] Node.js not found. Run windows\setup.cmd, or install Node.js 26 LTS from https://nodejs.org and open a new terminal.
 goto :fail
 
 :wrong_node
-echo [n8n] Node.js %NODE_MAJOR% detected. This setup requires Node.js 24 LTS.
+echo [n8n] Node.js %NODE_MAJOR% detected. This setup requires Node.js 24 or 26 LTS.
 goto :fail
 
 :install_failed

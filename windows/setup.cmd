@@ -4,20 +4,20 @@ for %%I in ("%~dp0..") do set "ROOT=%%~fI"
 cd /d "%ROOT%"
 title n8n setup
 
-rem winget's OpenJS.NodeJS.LTS already serves Node 26, so the 24.x release has to be pinned.
-set "NODE_VERSION=24.22.1"
+rem OpenJS.NodeJS.LTS follows the newest LTS line; pinned so it cannot jump to a major without isolated-vm prebuilds.
+set "NODE_VERSION=26.13.1"
 
 call :check_node
-if "%NODE_MAJOR%"=="24" goto :node_ok
+if defined NODE_OK goto :node_ok
 if defined NODE_MAJOR goto :wrong_node
 
 where winget >nul 2>&1 || goto :missing_winget
 echo [setup] Installing Node.js %NODE_VERSION% with winget
-winget install -e --id OpenJS.NodeJS.LTS --version %NODE_VERSION% --accept-source-agreements --accept-package-agreements || goto :node_install_failed
+winget install -e --source winget --id OpenJS.NodeJS.LTS --version %NODE_VERSION% --accept-source-agreements --accept-package-agreements || goto :node_install_failed
 rem The installer updates PATH only for new terminals; add its default location for this session.
 set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;%PATH%"
 call :check_node
-if not "%NODE_MAJOR%"=="24" goto :node_not_on_path
+if not defined NODE_OK goto :node_not_on_path
 
 :node_ok
 echo [setup] Node.js %NODE_MAJOR% found
@@ -49,16 +49,19 @@ exit /b 0
 
 :check_node
 set "NODE_MAJOR="
+set "NODE_OK="
 where node >nul 2>&1 || exit /b 0
 for /f "tokens=1 delims=v." %%M in ('node -v') do set "NODE_MAJOR=%%M"
+if "%NODE_MAJOR%"=="24" set "NODE_OK=1"
+if "%NODE_MAJOR%"=="26" set "NODE_OK=1"
 exit /b 0
 
 :wrong_node
-echo [setup] Node.js %NODE_MAJOR% is installed, but this setup requires Node.js 24 LTS. Uninstall it or switch versions, then run this script again.
+echo [setup] Node.js %NODE_MAJOR% is installed, but this setup requires Node.js 24 or 26 LTS. Uninstall it or switch versions, then run this script again.
 goto :fail
 
 :missing_winget
-echo [setup] winget not found. Install Node.js 24 LTS from https://nodejs.org and run this script again.
+echo [setup] winget not found. Install Node.js 26 LTS from https://nodejs.org and run this script again.
 goto :fail
 
 :node_install_failed

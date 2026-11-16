@@ -43,24 +43,24 @@ Run it from the repository root. `--env-file` is required because Compose otherw
 
 ### Requirements
 
-- **Node.js 24 LTS**. n8n 2.x requires Node 24 or newer. The scripts only accept Node 24 because `isolated-vm` and `sqlite3` ship prebuilt Windows binaries for it. Other versions need Visual Studio Build Tools to compile them.
+- **Node.js 24 or 26 LTS**. n8n 2.x requires Node 24 or newer, and the official Docker image runs on Node 26. The scripts accept only these two because `isolated-vm` ships prebuilt Windows x64 binaries for them. Other versions need Visual Studio Build Tools to compile it.
 
 ### Setup
 
 Double-click `windows\setup.cmd`, or run it from a terminal. The script:
 
-1. Installs Node.js 24 with winget when Node is missing. If another Node version is installed, it stops and leaves it alone.
+1. Installs Node.js 26 with winget when Node is missing. If a Node version other than 24 or 26 is installed, it stops and leaves it alone.
 2. Creates `.env` from `.env.example` with a random `N8N_ENCRYPTION_KEY` when `.env` does not exist. An existing `.env` is never changed.
 3. Installs `n8n@<N8N_VERSION>` globally with npm.
 
-Without winget, install Node.js 24 LTS from <https://nodejs.org> and run the script again.
+Without winget, install Node.js 26 LTS from <https://nodejs.org> and run the script again.
 
 ### Run
 
 Double-click `windows\start-n8n.cmd`, or run it from a terminal. The script:
 
 1. Loads `.env`.
-2. Checks that the encryption key is set and that Node 24 is installed.
+2. Checks that the encryption key is set and that Node 24 or 26 is installed.
 3. Installs `n8n@<N8N_VERSION>` globally with npm when it is missing or on a different version. To upgrade, change `N8N_VERSION` in `.env` and start the script again.
 4. Applies the same memory limits as the Docker setup: 512 MB heap for the main process and 256 MB for the task runner.
 5. Starts n8n and restarts it 10 seconds after it exits. Close the window to stop it.
