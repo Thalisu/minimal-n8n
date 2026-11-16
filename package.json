@@ -1,0 +1,10 @@
+{
+  "name": "minimal-n8n",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

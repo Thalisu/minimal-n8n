@@ -1,0 +1,2 @@
+# Stored with CRLF in the repo so cmd.exe can run it straight from a GitHub download; -text stops git from normalizing it to LF.
+start-n8n.cmd -text

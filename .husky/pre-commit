@@ -1,0 +1,6 @@
+file=start-n8n.cmd
+
+if git diff --cached --name-only | grep -qx "$file"; then
+  node -e 'const fs=require("fs");const f=process.argv[1];const s=fs.readFileSync(f,"utf8");const o=s.replace(/\r?\n/g,"\r\n");if(o!==s)fs.writeFileSync(f,o)' "$file"
+  git add "$file"
+fi
